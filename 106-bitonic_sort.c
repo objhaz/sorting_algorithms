@@ -1,97 +1,91 @@
 #include "sort.h"
 
+
 /**
- * swap_values - swaps 2 values in an array of ints
- *
- * @array: the array of ints
- * @i1: index of first value
- * @i2: index of 2nd value
- *
- * Return: the array with value
- */
+* swapint - swaps index's of array
+* @l: left or low index to swap
+* @r: right or high index
+*/
 
-void swap_values(int **array, ssize_t i1, ssize_t i2)
+void swapint(int *l, int *r)
 {
-	int tmp;
+	int temp;
 
-	tmp = (*array)[i1];
-	(*array)[i1] = (*array)[i2];
-	(*array)[i2] = tmp;
+	temp = *l;
+	*l = *r;
+	*r = temp;
 }
 
 /**
- * partition - partitions for quicksort using the Hoare scheme
- *
- * @array: the array to sort
- * @lo: the lowest index of the partition to sort
- * @hi: the highest index of the partition to sort
- * @size: size of the array
- *
- * Return: index of the partition
- */
-size_t partition(int *array, ssize_t lo, ssize_t hi, size_t size)
+* b_merge - bitonic merge
+* @array: Array slice being merged
+* @low: lowest index
+* @count: Count of slice
+* @dir: Direction, ascending 1 descending 0
+* @size: size of total array for printing
+*/
+
+void b_merge(int *array, int low, int count, int dir, size_t size)
 {
-	int pivot;
+	int i, n;
 
-	pivot = array[hi];
-
-	while (lo <= hi)
+	if (count > 1)
 	{
-		while (array[lo] < pivot)
-			lo++;
-		while (array[hi] > pivot)
-			hi--;
-		if (lo <= hi)
+		n = count / 2;
+		for (i = low; i < low + n; i++)
 		{
-			if (lo != hi)
-			{
-				swap_values(&array, lo, hi);
-				print_array(array, size);
-			}
-			lo++;
-			hi--;
+			if (((array[i] > array[i + n]) && dir == 1) ||
+			(dir == 0 && (array[i] < array[i + n])))
+				swapint(&array[i], &array[i + n]);
 		}
+		b_merge(array, low, n, dir, size);
+		b_merge(array, low + n, n, dir, size);
 	}
-	return (hi);
 }
 
 /**
- * _quick_sort - partitions the array, then sorts each partition
- *
- * @array: the array to sort
- * @lo: the lowest index of the partition to sort
- * @hi: the highest index of the partition to sort
- * @size: size of the array
- */
+* b_sort - bitonic recursive sort
+* @array: array to sort
+* @low: lowest index
+* @count: Count of slice
+* @dir: Direction, ascending 1 descending 0
+* @size: size of total array for printing
+*/
 
-void _quick_sort(int *array, ssize_t lo, ssize_t hi, size_t size)
+void b_sort(int *array, int low, int count, int dir, size_t size)
 {
-	ssize_t pivot;
+	int n;
 
-	if (lo < hi)
+	if (count > 1)
 	{
-		pivot = partition(array, lo, hi, size);
-		_quick_sort(array, lo, pivot, size);
-		_quick_sort(array, pivot + 1, hi, size);
+		n = count / 2;
+		printf("Merging [%d/%d] ", count, (int)size);
+		if (dir == 1)
+			printf("(UP):\n");
+		else
+			printf("(DOWN):\n");
+		print_array(array + low, count);
+		b_sort(array, low, n, 1, size);
+		b_sort(array, low + n, n, 0, size);
+		b_merge(array, low, count, dir, size);
+		printf("Result [%d/%d] ", count, (int)size);
+		if (dir == 1)
+			printf("(UP):\n");
+		else
+			printf("(DOWN):\n");
+		print_array(array + low, count);
 	}
 }
 
-
-
 /**
- * quick_sort_hoare - sorts an array of integers using quicksort
- *
- * @array: the array of integers
- * @size: the size of the array
- */
+* bitonic_sort - Sorts array using bitonic algo
+* @array: Array to sort
+* @size: Size of array
+*/
 
-void quick_sort_hoare(int *array, size_t size)
+void bitonic_sort(int *array, size_t size)
 {
-	ssize_t lo = 0;
-	ssize_t hi = (size - 1);
-
-	if (!array || size < 2)
+	if (array == NULL || size < 2)
 		return;
-
-	_quick_sort(array, lo, hi, size);
+	b_sort(array, 0, size, 1, size);
 }
